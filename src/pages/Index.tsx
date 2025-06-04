@@ -10,6 +10,7 @@ import ClientDashboard from '@/components/Dashboard/ClientDashboard';
 import AdminDashboard from '@/components/Dashboard/AdminDashboard';
 import TicketList from '@/components/Tickets/TicketList';
 import CreateTicketForm from '@/components/Tickets/CreateTicketForm';
+import Settings from '@/components/Settings/Settings';
 
 const MainApp = () => {
   const { user, isAuthenticated } = useAuth();
@@ -51,12 +52,7 @@ const MainApp = () => {
           </div>
         );
       case 'settings':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Settings</h2>
-            <p className="text-gray-600">System settings coming soon...</p>
-          </div>
-        );
+        return <Settings />;
       default:
         return user?.role === 'admin' ? <AdminDashboard /> : <ClientDashboard />;
     }
