@@ -218,7 +218,7 @@ const Settings = () => {
                 Save System Settings
               </Button>
             </CardContent>
-          </CardContent>
+          </Card>
         )}
 
         {/* Save All Button */}
