@@ -17,6 +17,9 @@ const Settings = () => {
   const [notifications, setNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [ticketPrefix, setTicketPrefix] = useState('TK');
+  const [maxFileSize, setMaxFileSize] = useState('10');
+  const [autoAssign, setAutoAssign] = useState(false);
 
   const handleSaveProfile = () => {
     toast({
@@ -29,6 +32,13 @@ const Settings = () => {
     toast({
       title: "Preferences Updated",
       description: "Your application preferences have been saved.",
+    });
+  };
+
+  const handleSaveSystemSettings = () => {
+    toast({
+      title: "System Settings Updated",
+      description: "System configuration has been saved successfully.",
     });
   };
 
@@ -147,6 +157,9 @@ const Settings = () => {
                 onCheckedChange={setAutoRefresh}
               />
             </div>
+            <Button onClick={handleSavePreferences} className="w-fit mt-4">
+              Save Notification Settings
+            </Button>
           </CardContent>
         </Card>
 
@@ -174,6 +187,9 @@ const Settings = () => {
                 onCheckedChange={setDarkMode}
               />
             </div>
+            <Button onClick={handleSavePreferences} className="w-fit mt-4">
+              Save Appearance Settings
+            </Button>
           </CardContent>
         </Card>
 
@@ -195,13 +211,22 @@ const Settings = () => {
                   <Label htmlFor="ticketPrefix">Ticket ID Prefix</Label>
                   <Input
                     id="ticketPrefix"
-                    defaultValue="TK"
+                    value={ticketPrefix}
+                    onChange={(e) => setTicketPrefix(e.target.value)}
                     placeholder="TK"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="autoAssign">Auto-Assignment</Label>
-                  <Switch defaultChecked={false} />
+                  <Label>Auto-Assignment</Label>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <Switch 
+                      checked={autoAssign}
+                      onCheckedChange={setAutoAssign}
+                    />
+                    <span className="text-sm text-gray-600">
+                      {autoAssign ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
@@ -209,12 +234,13 @@ const Settings = () => {
                 <Input
                   id="maxFileSize"
                   type="number"
-                  defaultValue="10"
+                  value={maxFileSize}
+                  onChange={(e) => setMaxFileSize(e.target.value)}
                   min="1"
                   max="100"
                 />
               </div>
-              <Button onClick={handleSavePreferences} className="w-fit">
+              <Button onClick={handleSaveSystemSettings} className="w-fit">
                 Save System Settings
               </Button>
             </CardContent>
@@ -223,7 +249,7 @@ const Settings = () => {
 
         {/* Save All Button */}
         <div className="flex justify-end">
-          <Button onClick={handleSavePreferences} size="lg">
+          <Button onClick={handleSavePreferences} size="lg" variant="default">
             Save All Changes
           </Button>
         </div>
