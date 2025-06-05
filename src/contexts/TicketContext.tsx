@@ -10,6 +10,7 @@ interface TicketContextType {
   assignTicket: (id: string, assignedTo: string, assignedToName: string) => void;
   resolveTicket: (id: string, resolutionNotes?: string, resolvedBy?: string) => void;
   addLog: (log: Omit<TicketLog, 'id' | 'timestamp'>) => void;
+  refreshTickets: () => void;
 }
 
 const TicketContext = createContext<TicketContextType | undefined>(undefined);
@@ -53,8 +54,29 @@ const mockTickets: Ticket[] = [
 ];
 
 export const TicketProvider = ({ children }: { children: React.ReactNode }) => {
-  const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
-  const [logs, setLogs] = useState<TicketLog[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>(() => {
+    // Try to load tickets from localStorage on initialization
+    const savedTickets = localStorage.getItem('tickets');
+    return savedTickets ? JSON.parse(savedTickets) : mockTickets;
+  });
+  
+  const [logs, setLogs] = useState<TicketLog[]>(() => {
+    // Try to load logs from localStorage on initialization
+    const savedLogs = localStorage.getItem('ticketLogs');
+    return savedLogs ? JSON.parse(savedLogs) : [];
+  });
+
+  // Save tickets to localStorage whenever tickets change
+  useEffect(() => {
+    localStorage.setItem('tickets', JSON.stringify(tickets));
+    console.log('Tickets saved to localStorage:', tickets);
+  }, [tickets]);
+
+  // Save logs to localStorage whenever logs change
+  useEffect(() => {
+    localStorage.setItem('ticketLogs', JSON.stringify(logs));
+    console.log('Logs saved to localStorage:', logs);
+  }, [logs]);
 
   const createTicket = (ticketData: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newTicket: Ticket = {
@@ -64,7 +86,11 @@ export const TicketProvider = ({ children }: { children: React.ReactNode }) => {
       updatedAt: new Date().toISOString(),
     };
     
-    setTickets(prev => [newTicket, ...prev]);
+    setTickets(prev => {
+      const updated = [newTicket, ...prev];
+      console.log('Ticket created:', newTicket);
+      return updated;
+    });
     
     addLog({
       ticketId: newTicket.id,
@@ -74,11 +100,15 @@ export const TicketProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const updateTicket = (id: string, updates: Partial<Ticket>) => {
-    setTickets(prev => prev.map(ticket => 
-      ticket.id === id 
-        ? { ...ticket, ...updates, updatedAt: new Date().toISOString() }
-        : ticket
-    ));
+    setTickets(prev => {
+      const updated = prev.map(ticket => 
+        ticket.id === id 
+          ? { ...ticket, ...updates, updatedAt: new Date().toISOString() }
+          : ticket
+      );
+      console.log('Ticket updated:', { id, updates });
+      return updated;
+    });
   };
 
   const assignTicket = (id: string, assignedTo: string, assignedToName: string) => {
@@ -93,10 +123,12 @@ export const TicketProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const resolveTicket = (id: string, resolutionNotes?: string, resolvedBy?: string) => {
-    updateTicket(id, { 
-      status: 'Resolved', 
+    const updates = { 
+      status: 'Resolved' as const, 
       resolutionNotes: resolutionNotes || 'Ticket resolved by admin'
-    });
+    };
+    
+    updateTicket(id, updates);
     
     addLog({
       ticketId: id,
@@ -104,6 +136,8 @@ export const TicketProvider = ({ children }: { children: React.ReactNode }) => {
       performedBy: resolvedBy || 'admin',
       notes: resolutionNotes || 'Ticket marked as resolved',
     });
+
+    console.log('Ticket resolved:', { id, updates });
   };
 
   const addLog = (logData: Omit<TicketLog, 'id' | 'timestamp'>) => {
@@ -113,7 +147,20 @@ export const TicketProvider = ({ children }: { children: React.ReactNode }) => {
       timestamp: new Date().toISOString(),
     };
     
-    setLogs(prev => [newLog, ...prev]);
+    setLogs(prev => {
+      const updated = [newLog, ...prev];
+      console.log('Log added:', newLog);
+      return updated;
+    });
+  };
+
+  const refreshTickets = () => {
+    // Force re-render and reload from localStorage if needed
+    const savedTickets = localStorage.getItem('tickets');
+    if (savedTickets) {
+      setTickets(JSON.parse(savedTickets));
+    }
+    console.log('Tickets refreshed');
   };
 
   const value = {
@@ -124,6 +171,7 @@ export const TicketProvider = ({ children }: { children: React.ReactNode }) => {
     assignTicket,
     resolveTicket,
     addLog,
+    refreshTickets,
   };
 
   return <TicketContext.Provider value={value}>{children}</TicketContext.Provider>;

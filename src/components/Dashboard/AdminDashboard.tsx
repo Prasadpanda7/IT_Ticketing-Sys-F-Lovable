@@ -1,12 +1,22 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Ticket, Clock, CheckCircle, AlertCircle, Users, TrendingUp } from 'lucide-react';
+import { Ticket, Clock, CheckCircle, AlertCircle, Users, TrendingUp, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useTickets } from '@/contexts/TicketContext';
 import TicketCard from '@/components/Tickets/TicketCard';
 
 const AdminDashboard = () => {
-  const { tickets } = useTickets();
+  const { tickets, refreshTickets } = useTickets();
+  
+  // Auto-refresh every 5 seconds to ensure dashboard stays updated
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshTickets();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [refreshTickets]);
   
   const openTickets = tickets.filter(ticket => ticket.status === 'Open');
   const inProgressTickets = tickets.filter(ticket => ticket.status === 'In Progress');
@@ -21,11 +31,21 @@ const AdminDashboard = () => {
     return acc;
   }, {} as Record<string, number>);
 
+  const handleManualRefresh = () => {
+    refreshTickets();
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-gray-900">Admin Dashboard</h2>
-        <p className="text-gray-600">Monitor and manage all support tickets</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Admin Dashboard</h2>
+          <p className="text-gray-600">Monitor and manage all support tickets</p>
+        </div>
+        <Button onClick={handleManualRefresh} variant="outline" size="sm">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
       {/* Stats Cards */}
