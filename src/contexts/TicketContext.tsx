@@ -8,6 +8,7 @@ interface TicketContextType {
   createTicket: (ticket: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateTicket: (id: string, updates: Partial<Ticket>) => void;
   assignTicket: (id: string, assignedTo: string, assignedToName: string) => void;
+  resolveTicket: (id: string, resolutionNotes?: string, resolvedBy?: string) => void;
   addLog: (log: Omit<TicketLog, 'id' | 'timestamp'>) => void;
 }
 
@@ -91,6 +92,20 @@ export const TicketProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
+  const resolveTicket = (id: string, resolutionNotes?: string, resolvedBy?: string) => {
+    updateTicket(id, { 
+      status: 'Resolved', 
+      resolutionNotes: resolutionNotes || 'Ticket resolved by admin'
+    });
+    
+    addLog({
+      ticketId: id,
+      action: 'Ticket Resolved',
+      performedBy: resolvedBy || 'admin',
+      notes: resolutionNotes || 'Ticket marked as resolved',
+    });
+  };
+
   const addLog = (logData: Omit<TicketLog, 'id' | 'timestamp'>) => {
     const newLog: TicketLog = {
       ...logData,
@@ -107,6 +122,7 @@ export const TicketProvider = ({ children }: { children: React.ReactNode }) => {
     createTicket,
     updateTicket,
     assignTicket,
+    resolveTicket,
     addLog,
   };
 

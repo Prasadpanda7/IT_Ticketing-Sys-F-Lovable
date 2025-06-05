@@ -3,9 +3,12 @@ import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, User, AlertCircle } from 'lucide-react';
+import { Clock, User, AlertCircle, CheckCircle } from 'lucide-react';
 import { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTickets } from '@/contexts/TicketContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface TicketCardProps {
   ticket: Ticket;
@@ -14,6 +17,10 @@ interface TicketCardProps {
 }
 
 const TicketCard = ({ ticket, onViewDetails, showUser = false }: TicketCardProps) => {
+  const { user } = useAuth();
+  const { resolveTicket } = useTickets();
+  const { toast } = useToast();
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'High': return 'bg-red-100 text-red-800 border-red-200';
@@ -41,6 +48,16 @@ const TicketCard = ({ ticket, onViewDetails, showUser = false }: TicketCardProps
       minute: '2-digit',
     });
   };
+
+  const handleSolveTicket = () => {
+    resolveTicket(ticket.id, 'Ticket resolved by admin', user?.id);
+    toast({
+      title: "Ticket Resolved",
+      description: `Ticket "${ticket.subject}" has been marked as resolved.`,
+    });
+  };
+
+  const canSolveTicket = user?.role === 'admin' && ticket.status !== 'Resolved' && ticket.status !== 'Closed';
 
   return (
     <Card className="hover:shadow-md transition-shadow cursor-pointer">
@@ -95,16 +112,29 @@ const TicketCard = ({ ticket, onViewDetails, showUser = false }: TicketCardProps
             )}
           </div>
           
-          {onViewDetails && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => onViewDetails(ticket)}
-              className="h-8 px-3 text-xs"
-            >
-              View Details
-            </Button>
-          )}
+          <div className="flex items-center space-x-2">
+            {canSolveTicket && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSolveTicket}
+                className="h-8 px-3 text-xs text-green-700 border-green-200 hover:bg-green-50"
+              >
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Solve Ticket
+              </Button>
+            )}
+            {onViewDetails && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onViewDetails(ticket)}
+                className="h-8 px-3 text-xs"
+              >
+                View Details
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
